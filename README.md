@@ -16,6 +16,12 @@
 
 ---
 
+## 界面
+
+![改动列表与行级暂存](docs/screenshots/changes.png)
+
+![提交历史与分支树](docs/screenshots/history.png)
+
 ## 为什么做这个
 
 SmartGit 之后没找到顺手的免费 Git 客户端：要么太重，要么把登录、云同步、AI 订阅塞进来。萤火虫只解决日常最高频的几件事，刻意不做的比做的多。
