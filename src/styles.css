@@ -1,0 +1,1250 @@
+:root {
+  --bg: #0e1014;
+  --panel: #13161d;
+  --panel-2: #181c25;
+  --panel-3: #1e2330;
+  --border: #262b38;
+  --border-strong: #343b4d;
+  --fg: #e7e9ee;
+  --muted: #8b93a7;
+  --faint: #5b6274;
+  --accent: #3ddc97;
+  --accent-strong: #2fbf82;
+  --accent-soft: rgba(61, 220, 151, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --warn: #fbbf24;
+  --info: #60a5fa;
+  --input: #0f1218;
+  --hover: rgba(255, 255, 255, 0.055);
+  /* 选中态用中性色，避免和分支 lane 的配色混淆 */
+  --selected: rgba(255, 255, 255, 0.075);
+  --selected-bar: rgba(231, 233, 238, 0.85);
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.5);
+  --diff-add-bg: rgba(61, 220, 151, 0.1);
+  --diff-del-bg: rgba(248, 113, 113, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* ---------- 基础控件 ---------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel-2);
+  color: var(--fg);
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--panel-3);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b1a13;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-strong);
+}
+
+.btn-sm {
+  height: 22px;
+  padding: 0 8px;
+  font-size: 11px;
+  flex: none;
+}
+
+.btn-danger {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: rgba(248, 113, 113, 0.45);
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: rgba(248, 113, 113, 0.25);
+}
+
+.icon-btn {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  flex: none;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.link-btn {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+.select {
+  height: 28px;
+  background: var(--input);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 6px;
+  font-size: 12px;
+  font-family: inherit;
+  outline: none;
+}
+
+.recent-select {
+  max-width: 260px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ---------- 顶栏 ---------- */
+
+.app-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.repo-bar {
+  height: 44px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.repo-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.branch-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  flex: none;
+}
+
+.branch-name {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- 分支切换 ---------- */
+
+.branch-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.branch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--accent);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 240px;
+}
+
+.branch-btn:hover {
+  background: var(--hover);
+  border-color: var(--border);
+}
+
+.branch-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-ab {
+  font-size: 11px;
+  flex: none;
+}
+
+.branch-menu {
+  position: absolute;
+  top: 32px;
+  right: 0;
+  width: 300px;
+  max-height: 360px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  z-index: 40;
+}
+
+.branch-menu-head {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.branch-menu-list {
+  overflow: auto;
+  padding: 4px;
+}
+
+.branch-item {
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  color: var(--fg);
+  font-size: 12px;
+}
+
+.branch-item:hover {
+  background: var(--hover);
+}
+
+.branch-item.current {
+  color: var(--accent);
+}
+
+.branch-pick {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  text-align: left;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.branch-action {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.branch-item:hover .branch-action {
+  opacity: 1;
+}
+
+.branch-action:hover {
+  background: var(--panel-3);
+  color: var(--fg);
+}
+
+.branch-action:last-child {
+  margin-right: 4px;
+}
+
+.merge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--warn);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  font-size: 11px;
+  flex: none;
+}
+
+.merge-abort {
+  border: none;
+  background: transparent;
+  color: var(--warn);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.branch-check {
+  width: 14px;
+  display: inline-flex;
+  justify-content: center;
+  flex: none;
+}
+
+.branch-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-upstream {
+  color: var(--faint);
+  font-size: 10.5px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-empty {
+  padding: 10px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.branch-create-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  flex: none;
+}
+
+.branch-create-btn:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+
+.branch-create {
+  padding: 6px;
+  border-top: 1px solid var(--border);
+  flex: none;
+}
+
+.branch-input {
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  background: var(--input);
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 12px;
+  outline: none;
+  user-select: text;
+}
+
+.branch-input:focus {
+  border-color: var(--accent);
+}
+
+/* ---------- 确认弹窗 ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 80;
+}
+
+.modal {
+  width: 430px;
+  max-width: 90vw;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.modal-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.modal-body {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ---------- 视图切换 ---------- */
+
+.view-tabs {
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.view-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 0 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.view-tab:hover {
+  color: var(--fg);
+}
+
+.view-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ---------- 主布局 ---------- */
+
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.change-list {
+  width: 300px;
+  flex: none;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
+
+.section + .section {
+  border-top: 1px solid var(--border);
+}
+
+.section-head {
+  height: 30px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.section-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.section-empty {
+  padding: 14px 12px;
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.change-row {
+  height: 27px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.change-row:hover {
+  background: var(--hover);
+}
+
+.change-row.selected {
+  background: var(--selected);
+}
+
+.badge {
+  flex: none;
+  width: 14px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.badge-m {
+  color: var(--warn);
+}
+.badge-a {
+  color: var(--accent);
+}
+.badge-d {
+  color: var(--danger);
+}
+.badge-r,
+.badge-c {
+  color: var(--info);
+}
+.badge-untracked {
+  color: var(--faint);
+}
+.badge-conflict {
+  color: var(--danger);
+}
+
+.row-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.dir {
+  color: var(--faint);
+}
+
+.name {
+  color: var(--fg);
+}
+
+.row-action {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  /* 常显但弱化，避免被误以为只支持「全部暂存」 */
+  opacity: 0.45;
+  transition: opacity 0.12s ease;
+}
+
+.change-row:hover .row-action,
+.change-row.selected .row-action {
+  opacity: 1;
+}
+
+.row-action:hover {
+  background: var(--panel-3);
+  color: var(--fg);
+}
+
+/* ---------- diff ---------- */
+
+.main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.diff-head {
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.diff-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.tag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  color: var(--muted);
+  flex: none;
+}
+
+.tag-staged {
+  color: var(--accent);
+  border-color: rgba(61, 220, 151, 0.35);
+  background: var(--accent-soft);
+}
+
+.add-count {
+  color: var(--accent);
+  font-size: 11px;
+  flex: none;
+}
+
+.del-count {
+  color: var(--danger);
+  font-size: 11px;
+  flex: none;
+}
+
+.diff-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.diff-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: var(--panel);
+}
+
+.diff-inner {
+  position: relative;
+  width: 100%;
+}
+
+.diff-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  display: flex;
+}
+
+.hunk-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 10px;
+  background: var(--panel-3);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-family: "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hunk-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diff-line {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+  font-family: "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 19px;
+  white-space: pre;
+}
+
+.diff-line.add {
+  background: var(--diff-add-bg);
+}
+
+.diff-line.del {
+  background: var(--diff-del-bg);
+}
+
+.diff-line.nonewline {
+  color: var(--faint);
+  font-style: italic;
+}
+
+.diff-line.selectable {
+  cursor: pointer;
+}
+
+/* 行选择用蓝色，和增/删的绿/红区分开 */
+.diff-line.selected {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.diff-line.selected .ln,
+.diff-line.selected .sign {
+  color: var(--info);
+}
+
+.line-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.ln {
+  flex: none;
+  width: 46px;
+  padding-right: 8px;
+  text-align: right;
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.02);
+  user-select: none;
+}
+
+.sign {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  color: var(--faint);
+  user-select: none;
+}
+
+.diff-line.add .sign {
+  color: var(--accent);
+}
+
+.diff-line.del .sign {
+  color: var(--danger);
+}
+
+.text {
+  padding-right: 20px;
+}
+
+/* ---------- 历史 ---------- */
+
+.badge-t {
+  color: var(--info);
+}
+
+.commit-list {
+  width: 340px;
+  flex: none;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+}
+
+.commit-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.commit-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.commit-row.selected {
+  box-shadow: inset 2px 0 0 var(--selected-bar);
+}
+
+.commit-row.selected .commit-subject {
+  color: #ffffff;
+}
+
+.commit-main {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 0 6px;
+}
+
+.commit-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-sm {
+  font-size: 11px;
+}
+
+.graph-col {
+  position: relative;
+  flex: none;
+  align-self: stretch;
+  white-space: pre;
+  overflow: hidden;
+  font-family: "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--muted);
+  user-select: none;
+}
+
+.graph-text {
+  display: block;
+}
+
+/* 贯穿整行高度的 lane 竖线，bottom 多出 1px 用来盖住行间边框。 */
+.lane-line {
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  width: 1.5px;
+  border-radius: 1px;
+  opacity: 0.85;
+  /* left 指向 lane 中心，用位移把线本身也居中，和斜线端点严格重合 */
+  transform: translateX(-50%);
+}
+
+.lane-diag {
+  position: absolute;
+  top: 0;
+  bottom: -1px;
+  width: 2ch;
+}
+
+.graph-node {
+  font-weight: 700;
+}
+
+.graph-line {
+  display: flex;
+  padding: 0 10px;
+}
+
+.commit-row:hover {
+  background: var(--hover);
+}
+
+.commit-row.selected {
+  background: var(--selected);
+}
+
+.commit-subject {
+  font-size: 12.5px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-size: 10.5px;
+  line-height: 14px;
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.commit-author {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.commit-hash {
+  font-family: "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  color: var(--faint);
+  flex: none;
+}
+
+.commit-when {
+  flex: none;
+  margin-left: auto;
+  color: var(--faint);
+}
+
+.ref {
+  flex: none;
+  font-size: 9.5px;
+  line-height: 14px;
+  padding: 0 4px;
+  border-radius: 7px;
+  font-weight: 500;
+}
+
+.ref-branch {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(61, 220, 151, 0.3);
+}
+
+.ref-head {
+  background: rgba(61, 220, 151, 0.22);
+  color: #b8ffe0;
+  border: 1px solid var(--accent);
+}
+
+.ref-tag {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--warn);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+}
+
+.ref-remote {
+  background: rgba(96, 165, 250, 0.12);
+  color: var(--info);
+  border: 1px solid rgba(96, 165, 250, 0.32);
+}
+
+.commit-detail {
+  min-height: 0;
+}
+
+.commit-head {
+  flex: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.commit-title {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.commit-head-meta {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+
+.commit-head-refs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.commit-files {
+  flex: none;
+  max-height: 220px;
+  overflow: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.commit-file-row {
+  height: 27px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.commit-file-row:hover {
+  background: var(--hover);
+}
+
+.commit-file-row.selected {
+  background: var(--selected);
+}
+
+.commit-diff-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 提交区 ---------- */
+
+.commit-panel {
+  flex: none;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commit-message {
+  width: 100%;
+  height: 88px;
+  resize: none;
+  background: var(--input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  user-select: text;
+  outline: none;
+}
+
+.commit-message:focus {
+  border-color: var(--accent);
+}
+
+.commit-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  flex: none;
+}
+
+.checkbox.disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.checkbox input {
+  accent-color: var(--accent);
+}
+
+/* ---------- 提示 ---------- */
+
+.toast {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  background: var(--panel-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  z-index: 50;
+  max-width: 60vw;
+}
+
+.error-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #2a1518;
+  border-top: 1px solid rgba(248, 113, 113, 0.45);
+  color: var(--fg);
+  z-index: 60;
+}
+
+.error-main {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.error-main strong {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.error-main details {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.error-main summary {
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.error-main pre {
+  margin: 6px 0 0;
+  max-height: 120px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: 11px;
+  user-select: text;
+}
+
+.splash,
+.empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--muted);
+}
+
+.empty-state h2 {
+  color: var(--fg);
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* ---------- 滚动条 ---------- */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #414a60;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
