@@ -456,7 +456,8 @@ export const useRepo = create<RepoStore>((set, get) => {
 
     setView: (view) => {
       set({ view });
-      if (view === "history" && get().commits.length === 0) {
+      // 每次进入历史页都重新加载，避免切分支/外部提交后看到旧数据。
+      if (view === "history") {
         void get().loadHistory();
       }
     },

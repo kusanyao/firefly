@@ -900,7 +900,7 @@ body {
 
 .commit-main {
   flex: 1;
-  min-width: 0;
+  min-width: 150px;
   padding: 5px 0 6px;
 }
 

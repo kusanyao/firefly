@@ -109,13 +109,17 @@ export function CommitList() {
   const selected = useRepo((s) => s.selectedCommit);
   const loading = useRepo((s) => s.historyLoading);
 
+  // 图形前缀宽度上限 40ch，避免极端多 lane 时把提交标题挤出可视区。
   const graphWidth = useMemo(() => {
     const longest = graph.reduce((max, row) => Math.max(max, row.graph.length), 0);
-    return Math.min(60, Math.max(2, longest));
+    return Math.min(40, Math.max(2, longest));
   }, [graph]);
 
+  // 列表随 lane 数变宽（12px 等宽字体约 7.2px/ch），给标题/元信息留出空间。
+  const listWidth = Math.min(560, Math.max(340, graphWidth * 7.2 + 200));
+
   return (
-    <aside className="commit-list">
+    <aside className="commit-list" style={{ width: `${listWidth}px` }}>
       <div className="section-head">
         <span>
           提交树 <span className="muted">({commits.length})</span>
