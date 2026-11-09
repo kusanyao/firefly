@@ -480,6 +480,14 @@ body {
   margin-top: 16px;
 }
 
+.discard-path {
+  font-family: "Cascadia Mono", Consolas, "JetBrains Mono", monospace;
+  color: var(--fg);
+  margin-bottom: 6px;
+  word-break: break-all;
+  user-select: text;
+}
+
 /* ---------- 视图切换 ---------- */
 
 .view-tabs {
@@ -656,6 +664,11 @@ body {
 .row-action:hover {
   background: var(--panel-3);
   color: var(--fg);
+}
+
+.row-action.discard:hover {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 /* ---------- diff ---------- */

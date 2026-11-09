@@ -52,6 +52,7 @@ interface RepoStore {
   select: (path: string, staged: boolean) => Promise<void>;
   stageFile: (path: string) => Promise<void>;
   unstageFile: (path: string) => Promise<void>;
+  discardFile: (path: string) => Promise<void>;
   stageAll: () => Promise<void>;
   unstageAll: () => Promise<void>;
   toggleHunk: (hunkIndex: number, header: string, staged: boolean) => Promise<void>;
@@ -235,6 +236,21 @@ export const useRepo = create<RepoStore>((set, get) => {
         if (entry) await get().select(path, false);
       } catch (error) {
         set({ error: error as AppError });
+      }
+    },
+
+    discardFile: async (path) => {
+      const repo = get().repo;
+      if (!repo) return;
+      try {
+        await ipc.discardFile(repo, path);
+        if (get().selection?.path === path) {
+          set({ selection: null, diff: null });
+        }
+        await get().refresh();
+      } catch (error) {
+        set({ error: error as AppError });
+        await get().refresh();
       }
     },
 

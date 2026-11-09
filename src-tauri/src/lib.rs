@@ -24,6 +24,7 @@ pub fn run() {
             commands::repo_diff,
             commands::stage_file,
             commands::unstage_file,
+            commands::discard_file,
             commands::stage_all,
             commands::unstage_all,
             commands::toggle_hunk,

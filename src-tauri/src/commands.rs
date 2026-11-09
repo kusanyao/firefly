@@ -87,6 +87,11 @@ pub fn unstage_file(repo: String, path: String) -> Result<(), AppError> {
 }
 
 #[tauri::command(async)]
+pub fn discard_file(repo: String, path: String) -> Result<(), AppError> {
+    Ok(ops::discard_file(&repo, &path)?)
+}
+
+#[tauri::command(async)]
 pub fn stage_all(repo: String) -> Result<(), AppError> {
     Ok(ops::stage_all(&repo)?)
 }

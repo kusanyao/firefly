@@ -91,6 +91,22 @@ pub fn toggle_hunk(
     Ok(())
 }
 
+/// 丢弃工作区里某个文件的未暂存改动。
+/// 已跟踪文件恢复为 index 版本；未跟踪文件直接从磁盘删除。
+pub fn discard_file(repo: &str, path: &str) -> GitResult<()> {
+    if path.trim().is_empty() {
+        return Err(GitError::new("文件路径为空"));
+    }
+
+    let tracked = run_git(repo, &["ls-files", "--error-unmatch", "--", path]).is_ok();
+    if tracked {
+        run_git(repo, &["restore", "--worktree", "--", path])?;
+    } else {
+        run_git(repo, &["clean", "-f", "-d", "--", path])?;
+    }
+    Ok(())
+}
+
 /// 暂存/取消暂存任意选中的行。
 /// - `staged = false`：从工作区 diff 取行，正向应用到 index；
 /// - `staged = true`：从 index diff 取行，重建一个正向补丁把 index 恢复到目标内容。
@@ -313,6 +329,38 @@ mod tests {
         toggle_lines(repo, "file.txt", &staged_refs, true).unwrap();
 
         assert!(read_file_diff(repo, "file.txt", true).unwrap().hunks.is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn discards_tracked_changes_and_untracked_files() {
+        let dir = std::env::temp_dir().join(format!("firefly-discard-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        init_repo(&dir);
+
+        let repo = dir.to_str().unwrap();
+        std::fs::write(dir.join("tracked.txt"), "original\n").unwrap();
+        stage_file(repo, "tracked.txt").unwrap();
+        std::process::Command::new("git")
+            .arg("-C")
+            .arg(&dir)
+            .args(["-c", "user.name=T", "-c", "user.email=t@e.com", "commit", "-qm", "init"])
+            .status()
+            .unwrap();
+
+        std::fs::write(dir.join("tracked.txt"), "modified\n").unwrap();
+        std::fs::write(dir.join("untracked.txt"), "temp\n").unwrap();
+
+        discard_file(repo, "tracked.txt").unwrap();
+        // core.autocrlf=true 时检出会变成 CRLF，归一化后比较
+        let restored = std::fs::read_to_string(dir.join("tracked.txt"))
+            .unwrap()
+            .replace("\r\n", "\n");
+        assert_eq!(restored, "original\n");
+
+        discard_file(repo, "untracked.txt").unwrap();
+        assert!(!dir.join("untracked.txt").exists());
 
         let _ = std::fs::remove_dir_all(&dir);
     }

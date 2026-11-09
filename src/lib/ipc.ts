@@ -49,6 +49,7 @@ export const ipc = {
 
   stageFile: (repo: string, path: string) => call<void>("stage_file", { repo, path }),
   unstageFile: (repo: string, path: string) => call<void>("unstage_file", { repo, path }),
+  discardFile: (repo: string, path: string) => call<void>("discard_file", { repo, path }),
   stageAll: (repo: string) => call<void>("stage_all", { repo }),
   unstageAll: (repo: string) => call<void>("unstage_all", { repo }),
   toggleHunk: (
