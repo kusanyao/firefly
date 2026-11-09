@@ -36,7 +36,6 @@ interface RepoStore {
 
   view: ViewMode;
   graph: GraphRow[];
-  showAllBranches: boolean;
   commits: CommitSummary[];
   historyLoading: boolean;
   selectedCommit: CommitSummary | null;
@@ -67,7 +66,6 @@ interface RepoStore {
   abortRebase: () => Promise<void>;
   setView: (view: ViewMode) => void;
   loadHistory: () => Promise<void>;
-  setShowAllBranches: (value: boolean) => void;
   selectCommit: (commit: CommitSummary) => Promise<void>;
   selectCommitFile: (path: string) => Promise<void>;
   dismissError: () => void;
@@ -111,7 +109,6 @@ export const useRepo = create<RepoStore>((set, get) => {
 
     view: "changes",
     graph: [],
-    showAllBranches: true,
     commits: [],
     historyLoading: false,
     selectedCommit: null,
@@ -469,7 +466,7 @@ export const useRepo = create<RepoStore>((set, get) => {
       if (!repo) return;
       set({ historyLoading: true });
       try {
-        const rows = await ipc.repoGraph(repo, 100, get().showAllBranches);
+        const rows = await ipc.repoGraph(repo, 100);
         const commits = rows.flatMap((row) => (row.commit ? [row.commit] : []));
         set({ graph: rows, commits, historyLoading: false });
 
@@ -485,11 +482,6 @@ export const useRepo = create<RepoStore>((set, get) => {
       } catch (error) {
         set({ historyLoading: false, error: error as AppError });
       }
-    },
-
-    setShowAllBranches: (value) => {
-      set({ showAllBranches: value });
-      void get().loadHistory();
     },
 
     selectCommit: async (commit) => {

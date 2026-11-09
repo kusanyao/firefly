@@ -159,12 +159,8 @@ pub fn repo_log(repo: String, limit: Option<usize>) -> Result<Vec<CommitSummary>
 }
 
 #[tauri::command(async)]
-pub fn repo_graph(
-    repo: String,
-    limit: Option<usize>,
-    all: Option<bool>,
-) -> Result<Vec<GraphRow>, AppError> {
-    Ok(read_graph(&repo, limit.unwrap_or(100), all.unwrap_or(true))?)
+pub fn repo_graph(repo: String, limit: Option<usize>) -> Result<Vec<GraphRow>, AppError> {
+    Ok(read_graph(&repo, limit.unwrap_or(100))?)
 }
 
 #[tauri::command(async)]

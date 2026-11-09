@@ -64,23 +64,23 @@ pub fn read_commit_files(repo: &str, hash: &str) -> GitResult<Vec<CommitFile>> {
     Ok(parse_name_status(&bytes))
 }
 
-pub fn read_graph(repo: &str, limit: usize, all: bool) -> GitResult<Vec<GraphRow>> {
+pub fn read_graph(repo: &str, limit: usize) -> GitResult<Vec<GraphRow>> {
     let limit = limit.clamp(1, 1000);
     let limit_arg = format!("-n{limit}");
     // %x01 是哨兵：它前面是图形前缀，后面是提交字段。
-    let mut args: Vec<&str> = vec![
-        "log",
-        limit_arg.as_str(),
-        "--graph",
-        "--date-order",
-        // 用全名（refs/heads/…、refs/remotes/…）才能准确区分本地/远程/tag。
-        "--decorate=full",
-        "--format=%x01%H%x1f%h%x1f%an%x1f%at%x1f%s%x1f%D",
-    ];
-    if all {
-        args.push("--all");
-    }
-    let out = run_git(repo, &args)?;
+    // 只取当前 HEAD 的历史，不再使用 --all。
+    let out = run_git(
+        repo,
+        &[
+            "log",
+            limit_arg.as_str(),
+            "--graph",
+            "--date-order",
+            // 用全名（refs/heads/…、refs/remotes/…）才能准确区分本地/远程/tag。
+            "--decorate=full",
+            "--format=%x01%H%x1f%h%x1f%an%x1f%at%x1f%s%x1f%D",
+        ],
+    )?;
     Ok(parse_graph(&out))
 }
 

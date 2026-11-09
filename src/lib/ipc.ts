@@ -78,8 +78,7 @@ export const ipc = {
   abortRebase: (repo: string) => call<void>("abort_rebase", { repo }),
 
   repoLog: (repo: string, limit = 100) => call<CommitSummary[]>("repo_log", { repo, limit }),
-  repoGraph: (repo: string, limit = 100, all = true) =>
-    call<GraphRow[]>("repo_graph", { repo, limit, all }),
+  repoGraph: (repo: string, limit = 100) => call<GraphRow[]>("repo_graph", { repo, limit }),
   commitFiles: (repo: string, hash: string) => call<CommitFile[]>("commit_files", { repo, hash }),
   commitDiff: (repo: string, hash: string, path: string) =>
     call<FileDiff>("commit_diff", { repo, hash, path }),

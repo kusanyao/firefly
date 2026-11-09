@@ -904,16 +904,6 @@ body {
   padding: 5px 0 6px;
 }
 
-.commit-head-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox-sm {
-  font-size: 11px;
-}
-
 .graph-col {
   position: relative;
   flex: none;

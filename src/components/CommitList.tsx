@@ -108,7 +108,6 @@ export function CommitList() {
   const commits = useRepo((s) => s.commits);
   const selected = useRepo((s) => s.selectedCommit);
   const loading = useRepo((s) => s.historyLoading);
-  const showAll = useRepo((s) => s.showAllBranches);
 
   const graphWidth = useMemo(() => {
     const longest = graph.reduce((max, row) => Math.max(max, row.graph.length), 0);
@@ -121,17 +120,7 @@ export function CommitList() {
         <span>
           提交树 <span className="muted">({commits.length})</span>
         </span>
-        <span className="commit-head-actions">
-          {loading && <span className="muted">加载中…</span>}
-          <label className="checkbox checkbox-sm" title="显示所有分支的提交">
-            <input
-              type="checkbox"
-              checked={showAll}
-              onChange={(event) => useRepo.getState().setShowAllBranches(event.target.checked)}
-            />
-            全部分支
-          </label>
-        </span>
+        {loading && <span className="muted">加载中…</span>}
       </div>
 
       <div className="commit-body">
