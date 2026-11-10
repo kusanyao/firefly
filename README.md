@@ -5,7 +5,14 @@
 </p>
 
 <p align="center">
-  一个专注「看改动 → 暂存 → 提交」的本地 Git 客户端。免登录、不联网，数据只在你自己的机器上。
+  一个专注「看改动 → 暂存 → 提交」的本地 Git 客户端。免登录，日常操作全部在本机完成，
+  只有你主动抓取 / 拉取 / 推送时才会联网。
+</p>
+
+<p align="center">
+  <a href="https://github.com/kusanyao/firefly/releases"><img src="https://img.shields.io/github/v/release/kusanyao/firefly" alt="Release" /></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License" />
+  <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D6" alt="Platform" />
 </p>
 
 <p align="center">
@@ -22,11 +29,13 @@
 
 ![提交历史与分支树](docs/screenshots/history.png)
 
+![分支与远程分支](docs/screenshots/branches.png)
+
 ## 为什么做这个
 
 SmartGit 之后没找到顺手的免费 Git 客户端：要么太重，要么把登录、云同步、AI 订阅塞进来。萤火虫只解决日常最高频的几件事，刻意不做的比做的多。
 
-- **本地优先**：不登录、不上传代码、不需要网络，配置存在 `%APPDATA%\dev.firefly.app`
+- **本地优先**：不登录，代码与配置只留在本机；只有你主动执行远程操作时才会联网，配置存在 `%APPDATA%\dev.firefly.app`
 - **轻量**：Tauri 2 + 系统 WebView2，安装包只有几 MB
 - **行为可预期**：所有操作直接调用本机 `git` 命令行，规则、钩子、`.gitattributes`、CRLF 都和你终端里完全一致
 
@@ -108,7 +117,7 @@ src-tauri/src/
   git/status.rs   porcelain v2 解析
   git/diff.rs     diff 解析、单 hunk 补丁、按行补丁重建
   git/log.rs      提交历史 / 分支树 / 单提交文件列表
-  git/branch.rs   分支切换、新建、合并、变基
+  git/branch.rs   分支切换、新建、合并、变基与远程操作（fetch / pull / push）
   git/ops.rs      stage / unstage / commit
   commands.rs     Tauri 命令
   watcher.rs      仓库文件监视
@@ -128,6 +137,7 @@ src-tauri/src/
 - 未跟踪文件只支持整文件暂存，不能按行
 - 超过 2 MB 的 diff 不渲染
 - 没有语法高亮和字符级 diff
+- 远程操作依赖本机 Git 凭据，不支持强制推送和 `pull --rebase`
 - 仅测试了 Windows；Tauri 理论上可跨平台，但未验证
 
 ## 许可证
