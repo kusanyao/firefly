@@ -1,9 +1,10 @@
 use crate::error::AppError;
 use crate::git::branch::{
     abort_merge as abort_merge_impl, abort_rebase as abort_rebase_impl,
-    checkout_branch as switch_branch, create_branch as create_branch_impl,
-    merge_branch as merge_branch_impl, read_branches, rebase_branch as rebase_branch_impl,
-    BranchInfo, MergeOutcome,
+    checkout_branch as switch_branch, checkout_remote_branch as checkout_remote_impl,
+    create_branch as create_branch_impl, fetch_remotes as fetch_remotes_impl,
+    merge_branch as merge_branch_impl, read_branches, read_remote_branches,
+    rebase_branch as rebase_branch_impl, BranchInfo, MergeOutcome, RemoteBranch,
 };
 use crate::git::diff::{read_commit_file_diff, read_file_diff, FileDiff, LineRef};
 use crate::git::log::{read_commit_files, read_graph, read_log, CommitFile, CommitSummary, GraphRow};
@@ -121,6 +122,25 @@ pub fn toggle_hunk(
 #[tauri::command(async)]
 pub fn repo_branches(repo: String) -> Result<Vec<BranchInfo>, AppError> {
     Ok(read_branches(&repo)?)
+}
+
+#[tauri::command(async)]
+pub fn repo_remote_branches(repo: String) -> Result<Vec<RemoteBranch>, AppError> {
+    Ok(read_remote_branches(&repo)?)
+}
+
+#[tauri::command(async)]
+pub fn fetch_remotes(repo: String) -> Result<String, AppError> {
+    Ok(fetch_remotes_impl(&repo)?)
+}
+
+#[tauri::command(async)]
+pub fn checkout_remote_branch(
+    repo: String,
+    remote: String,
+    branch: String,
+) -> Result<(), AppError> {
+    Ok(checkout_remote_impl(&repo, &remote, &branch)?)
 }
 
 #[tauri::command(async)]

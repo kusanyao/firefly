@@ -8,6 +8,7 @@ import type {
   FileDiff,
   GraphRow,
   LineRef,
+  RemoteBranch,
   RepoStatus,
 } from "../types";
 
@@ -32,7 +33,9 @@ interface RepoStore {
   notice: string | null;
 
   branches: BranchInfo[];
+  remotes: RemoteBranch[];
   branchesLoading: boolean;
+  fetching: boolean;
 
   view: ViewMode;
   graph: GraphRow[];
@@ -58,6 +61,8 @@ interface RepoStore {
   toggleLines: (lines: LineRef[], staged: boolean) => Promise<void>;
   commit: (message: string, amend: boolean) => Promise<boolean>;
   loadBranches: () => Promise<void>;
+  fetchRemotes: () => Promise<void>;
+  checkoutRemote: (remote: string, branch: string) => Promise<void>;
   switchBranch: (branch: string) => Promise<void>;
   createBranch: (branch: string) => Promise<boolean>;
   mergeBranch: (branch: string) => Promise<boolean>;
@@ -105,7 +110,9 @@ export const useRepo = create<RepoStore>((set, get) => {
     notice: null,
 
     branches: [],
+    remotes: [],
     branchesLoading: false,
+    fetching: false,
 
     view: "changes",
     graph: [],
@@ -144,6 +151,7 @@ export const useRepo = create<RepoStore>((set, get) => {
           selection: null,
           diff: null,
           branches: [],
+          remotes: [],
           ...resetHistory,
         });
 
@@ -323,10 +331,46 @@ export const useRepo = create<RepoStore>((set, get) => {
       if (!repo) return;
       try {
         set({ branchesLoading: true });
-        const branches = await ipc.repoBranches(repo);
-        set({ branches, branchesLoading: false });
+        const [branches, remotes] = await Promise.all([
+          ipc.repoBranches(repo),
+          ipc.repoRemoteBranches(repo),
+        ]);
+        set({ branches, remotes, branchesLoading: false });
       } catch (error) {
         set({ branchesLoading: false, error: error as AppError });
+      }
+    },
+
+    fetchRemotes: async () => {
+      const { repo } = get();
+      if (!repo) return;
+      try {
+        set({ fetching: true, error: null });
+        await ipc.fetchRemotes(repo);
+        set({ fetching: false });
+        showNotice("已抓取远程更新");
+        await get().loadBranches();
+      } catch (error) {
+        set({ fetching: false, error: error as AppError });
+      }
+    },
+
+    checkoutRemote: async (remote, branch) => {
+      const { repo } = get();
+      if (!repo) return;
+      try {
+        set({ error: null });
+        await ipc.checkoutRemoteBranch(repo, remote, branch);
+        set({ selection: null, diff: null, ...resetHistory });
+        showNotice(`已检出 ${branch}`);
+        await get().refresh();
+        await get().loadBranches();
+        if (get().view === "history") {
+          await get().loadHistory();
+        }
+      } catch (error) {
+        set({ error: error as AppError });
+        await get().refresh();
       }
     },
 

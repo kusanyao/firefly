@@ -3,6 +3,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import {
   Check,
   ChevronDown,
+  Cloud,
   FolderOpen,
   GitBranch,
   GitMerge,
@@ -11,6 +12,11 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useRepo } from "../stores/repo";
+import type { RemoteBranch } from "../types";
+
+type PendingSwitch =
+  | { kind: "local"; name: string }
+  | { kind: "remote"; remote: string; branch: string };
 
 export function RepoBar() {
   const repo = useRepo((s) => s.repo);
@@ -18,12 +24,14 @@ export function RepoBar() {
   const recent = useRepo((s) => s.recent);
   const busy = useRepo((s) => s.busy);
   const branches = useRepo((s) => s.branches);
+  const remotes = useRepo((s) => s.remotes);
   const branchesLoading = useRepo((s) => s.branchesLoading);
+  const fetching = useRepo((s) => s.fetching);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [pendingBranch, setPendingBranch] = useState<string | null>(null);
+  const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const [pendingMerge, setPendingMerge] = useState<string | null>(null);
   const [pendingRebase, setPendingRebase] = useState<string | null>(null);
   const [pendingAbort, setPendingAbort] = useState<null | "merge" | "rebase">(null);
@@ -83,10 +91,33 @@ export function RepoBar() {
     // 有未提交改动时先确认一次，避免把改动意外带到别的分支。
     const dirty = (useRepo.getState().status?.entries.length ?? 0) > 0;
     if (dirty) {
-      setPendingBranch(name);
+      setPendingSwitch({ kind: "local", name });
       return;
     }
     void useRepo.getState().switchBranch(name);
+  };
+
+  const chooseRemote = (item: RemoteBranch) => {
+    closeMenu();
+
+    // 已存在同名本地分支时直接切换，避免 checkout 报「分支已存在」。
+    const local = useRepo.getState().branches.find((branch) => branch.name === item.branch);
+    if (local) {
+      chooseBranch(local.name, local.current);
+      return;
+    }
+
+    const dirty = (useRepo.getState().status?.entries.length ?? 0) > 0;
+    const target: PendingSwitch = {
+      kind: "remote",
+      remote: item.remote,
+      branch: item.branch,
+    };
+    if (dirty) {
+      setPendingSwitch(target);
+      return;
+    }
+    void useRepo.getState().checkoutRemote(item.remote, item.branch);
   };
 
   const chooseMerge = (name: string) => {
@@ -100,9 +131,14 @@ export function RepoBar() {
   };
 
   const confirmSwitch = () => {
-    const name = pendingBranch;
-    setPendingBranch(null);
-    if (name) void useRepo.getState().switchBranch(name);
+    const target = pendingSwitch;
+    setPendingSwitch(null);
+    if (!target) return;
+    if (target.kind === "local") {
+      void useRepo.getState().switchBranch(target.name);
+    } else {
+      void useRepo.getState().checkoutRemote(target.remote, target.branch);
+    }
   };
 
   const confirmMerge = () => {
@@ -188,7 +224,17 @@ export function RepoBar() {
           {menuOpen && (
             <div className="branch-menu">
               <div className="branch-menu-head">
-                切换分支 {branchesLoading && <span className="muted">加载中…</span>}
+                <span>
+                  切换分支 {branchesLoading && <span className="muted">加载中…</span>}
+                </span>
+                <button
+                  className="icon-btn branch-fetch"
+                  title="抓取远程更新（git fetch --all --prune）"
+                  disabled={fetching}
+                  onClick={() => void useRepo.getState().fetchRemotes()}
+                >
+                  <RefreshCw size={13} />
+                </button>
               </div>
               <div className="branch-menu-list">
                 {branches.map((item) => (
@@ -234,6 +280,26 @@ export function RepoBar() {
                 ))}
                 {!branchesLoading && branches.length === 0 && (
                   <div className="branch-empty">没有本地分支</div>
+                )}
+
+                {remotes.length > 0 && (
+                  <>
+                    <div className="branch-subhead">远程分支</div>
+                    {remotes.map((item) => (
+                      <div key={item.name} className="branch-item">
+                        <button
+                          className="branch-pick"
+                          onClick={() => chooseRemote(item)}
+                          title={`检出为本地分支 ${item.branch}`}
+                        >
+                          <span className="branch-check">
+                            <Cloud size={11} />
+                          </span>
+                          <span className="branch-item-name">{item.name}</span>
+                        </button>
+                      </div>
+                    ))}
+                  </>
                 )}
               </div>
 
@@ -286,19 +352,24 @@ export function RepoBar() {
         <RefreshCw size={14} />
       </button>
 
-      {pendingBranch && (
-        <div className="modal-backdrop" onMouseDown={() => setPendingBranch(null)}>
+      {pendingSwitch && (
+        <div className="modal-backdrop" onMouseDown={() => setPendingSwitch(null)}>
           <div className="modal" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="modal-title">切换到 {pendingBranch}</div>
+            <div className="modal-title">
+              {pendingSwitch.kind === "local"
+                ? `切换到 ${pendingSwitch.name}`
+                : `检出远程分支 ${pendingSwitch.remote}/${pendingSwitch.branch}`}
+            </div>
             <div className="modal-body">
               当前工作区还有未提交的改动。出现冲突时 git 会拒绝切换；不冲突的话，改动会被带到目标分支。
+              {pendingSwitch.kind === "remote" ? " 检出会创建同名的本地跟踪分支。" : ""}
             </div>
             <div className="modal-actions">
-              <button className="btn" onClick={() => setPendingBranch(null)}>
+              <button className="btn" onClick={() => setPendingSwitch(null)}>
                 取消
               </button>
               <button className="btn btn-primary" onClick={confirmSwitch}>
-                仍然切换
+                {pendingSwitch.kind === "local" ? "仍然切换" : "仍然检出"}
               </button>
             </div>
           </div>

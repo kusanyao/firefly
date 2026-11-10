@@ -74,6 +74,12 @@ export interface BranchInfo {
   upstream: string | null;
 }
 
+export interface RemoteBranch {
+  name: string;
+  remote: string;
+  branch: string;
+}
+
 export interface CommitSummary {
   hash: string;
   shortHash: string;

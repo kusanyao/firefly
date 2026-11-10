@@ -11,6 +11,15 @@ pub struct BranchInfo {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct RemoteBranch {
+    /// 完整短名，例如 `origin/main`
+    pub name: String,
+    pub remote: String,
+    pub branch: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MergeOutcome {
     /// 是否停在冲突状态（合并未完成，需要解决后提交或中止）。
     pub conflict: bool,
@@ -28,6 +37,74 @@ pub fn read_branches(repo: &str) -> GitResult<Vec<BranchInfo>> {
         ],
     )?;
     Ok(parse_branches(&out))
+}
+
+pub fn read_remote_branches(repo: &str) -> GitResult<Vec<RemoteBranch>> {
+    let out = run_git(
+        repo,
+        &["for-each-ref", "--format=%(refname:short)", "refs/remotes"],
+    )?;
+    Ok(parse_remote_branches(&out))
+}
+
+fn parse_remote_branches(text: &str) -> Vec<RemoteBranch> {
+    let mut list: Vec<RemoteBranch> = text
+        .lines()
+        .filter_map(|line| {
+            let name = line.trim();
+            if name.is_empty() || name.ends_with("/HEAD") {
+                return None;
+            }
+            let (remote, branch) = name.split_once('/')?;
+            Some(RemoteBranch {
+                name: name.to_string(),
+                remote: remote.to_string(),
+                branch: branch.to_string(),
+            })
+        })
+        .collect();
+    list.sort_by(|a, b| a.name.cmp(&b.name));
+    list
+}
+
+/// 把远程分支检出为同名的本地跟踪分支。
+pub fn checkout_remote_branch(repo: &str, remote: &str, branch: &str) -> GitResult<()> {
+    if remote.is_empty()
+        || branch.is_empty()
+        || remote.starts_with('-')
+        || branch.starts_with('-')
+    {
+        return Err(GitError::new("无效的远程分支"));
+    }
+    let remote_ref = format!("{remote}/{branch}");
+    run_git(repo, &["switch", "-c", branch, "--track", &remote_ref])?;
+    Ok(())
+}
+
+/// 抓取所有远程并清理已删除的远程跟踪分支。
+pub fn fetch_remotes(repo: &str) -> GitResult<String> {
+    let output = run_git_output(repo, &["fetch", "--all", "--prune"], None)?;
+    let stdout = decode_bytes(&output.stdout);
+    let stderr = decode_bytes(&output.stderr);
+
+    if output.status.success() {
+        let message = format!("{stdout}{stderr}").trim().to_string();
+        Ok(if message.is_empty() {
+            "已是最新".to_string()
+        } else {
+            message
+        })
+    } else {
+        Err(GitError {
+            message: if stderr.trim().is_empty() {
+                "抓取远程失败".to_string()
+            } else {
+                format!("抓取远程失败：{}", stderr.trim())
+            },
+            stderr,
+            code: output.status.code(),
+        })
+    }
 }
 
 pub fn checkout_branch(repo: &str, branch: &str) -> GitResult<()> {
@@ -172,6 +249,19 @@ fn parse_branches(text: &str) -> Vec<BranchInfo> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn parses_remote_branches() {
+        let raw = "origin/main\norigin/feature/x\nupstream/dev\norigin/HEAD\n";
+        let list = parse_remote_branches(raw);
+        assert_eq!(list.len(), 3);
+        // 按名字排序，且过滤掉 */HEAD
+        assert_eq!(list[0].name, "origin/feature/x");
+        assert_eq!(list[0].remote, "origin");
+        assert_eq!(list[0].branch, "feature/x");
+        assert_eq!(list[2].name, "upstream/dev");
+        assert_eq!(list[2].remote, "upstream");
+    }
 
     #[test]
     fn parses_branches_current_first() {

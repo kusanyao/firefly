@@ -45,11 +45,12 @@ SmartGit 之后没找到顺手的免费 Git 客户端：要么太重，要么把
 - 当前分支的 `git log --graph` 分支树：彩色 lane、合并/分叉连线
 - 点击提交查看该次提交的文件列表与单文件 diff
 - 分支切换、新建（`git switch -c`）、合并（`git merge`）、变基（`git rebase`）
+- 远程分支：分支菜单里一键 `git fetch --all --prune`，抓取后点击远程分支即可检出为本地跟踪分支
 - 工作区不干净时切换/合并会二次确认；合并/变基冲突进入对应状态，顶栏可中止
 
 ### 明确不做
 
-远程 fetch/pull/push、冲突三方编辑、交互式 rebase（squash / reword / 重排）。这些请交给终端或你现有的工具。
+远程 pull/push、冲突三方编辑、交互式 rebase（squash / reword / 重排）。这些请交给终端或你现有的工具。
 
 ## 下载
 
@@ -65,6 +66,7 @@ SmartGit 之后没找到顺手的免费 Git 客户端：要么太重，要么把
 - Windows 10 / 11 x64
 - 已安装 [Git for Windows](https://git-scm.com/download/win)（2.23+），且 `git` 在 `PATH` 中
 - WebView2 运行时（Windows 10/11 一般已自带）
+- 抓取远程使用本机 Git 的凭据配置：HTTPS 会调用 Git Credential Manager，SSH 需要已配置好密钥
 
 > 程序目前没有代码签名，SmartScreen 可能提示「未知发布者」，选择「仍要运行」即可。
 

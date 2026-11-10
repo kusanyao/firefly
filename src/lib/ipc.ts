@@ -10,6 +10,7 @@ import type {
   GraphRow,
   LineRef,
   MergeOutcome,
+  RemoteBranch,
   RepoInfo,
   RepoStatus,
 } from "../types";
@@ -66,6 +67,11 @@ export const ipc = {
     call<CommitResult>("commit", { repo, message, amend }),
 
   repoBranches: (repo: string) => call<BranchInfo[]>("repo_branches", { repo }),
+  repoRemoteBranches: (repo: string) =>
+    call<RemoteBranch[]>("repo_remote_branches", { repo }),
+  fetchRemotes: (repo: string) => call<string>("fetch_remotes", { repo }),
+  checkoutRemoteBranch: (repo: string, remote: string, branch: string) =>
+    call<void>("checkout_remote_branch", { repo, remote, branch }),
   checkoutBranch: (repo: string, branch: string) =>
     call<void>("checkout_branch", { repo, branch }),
   createBranch: (repo: string, branch: string) =>
