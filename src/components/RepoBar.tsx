@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Check,
   ChevronDown,
   Cloud,
@@ -27,6 +29,7 @@ export function RepoBar() {
   const remotes = useRepo((s) => s.remotes);
   const branchesLoading = useRepo((s) => s.branchesLoading);
   const fetching = useRepo((s) => s.fetching);
+  const syncing = useRepo((s) => s.syncing);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -341,6 +344,27 @@ export function RepoBar() {
             </div>
           )}
         </div>
+      )}
+
+      {status && (
+        <>
+          <button
+            className="icon-btn"
+            title={status.upstream ? `拉取 ${status.upstream}` : "当前分支没有上游分支"}
+            disabled={!status.upstream || syncing || merging || rebasing}
+            onClick={() => void useRepo.getState().pullChanges()}
+          >
+            <ArrowDownToLine size={14} />
+          </button>
+          <button
+            className="icon-btn"
+            title={status.upstream ? `推送 ${status.upstream}` : "当前分支没有上游分支"}
+            disabled={!status.upstream || syncing || merging || rebasing}
+            onClick={() => void useRepo.getState().pushChanges()}
+          >
+            <ArrowUpFromLine size={14} />
+          </button>
+        </>
       )}
 
       <button

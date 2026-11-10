@@ -36,6 +36,7 @@ interface RepoStore {
   remotes: RemoteBranch[];
   branchesLoading: boolean;
   fetching: boolean;
+  syncing: boolean;
 
   view: ViewMode;
   graph: GraphRow[];
@@ -62,6 +63,8 @@ interface RepoStore {
   commit: (message: string, amend: boolean) => Promise<boolean>;
   loadBranches: () => Promise<void>;
   fetchRemotes: () => Promise<void>;
+  pullChanges: () => Promise<void>;
+  pushChanges: () => Promise<void>;
   checkoutRemote: (remote: string, branch: string) => Promise<void>;
   switchBranch: (branch: string) => Promise<void>;
   createBranch: (branch: string) => Promise<boolean>;
@@ -113,6 +116,7 @@ export const useRepo = create<RepoStore>((set, get) => {
     remotes: [],
     branchesLoading: false,
     fetching: false,
+    syncing: false,
 
     view: "changes",
     graph: [],
@@ -352,6 +356,42 @@ export const useRepo = create<RepoStore>((set, get) => {
         await get().loadBranches();
       } catch (error) {
         set({ fetching: false, error: error as AppError });
+      }
+    },
+
+    pullChanges: async () => {
+      const { repo } = get();
+      if (!repo) return;
+      try {
+        set({ syncing: true, error: null });
+        const outcome = await ipc.pullCurrent(repo);
+        set({ syncing: false, selection: null, diff: null, ...resetHistory });
+        showNotice(
+          outcome.conflict ? "拉取出现冲突，请解决或中止合并" : "已拉取远程更新",
+        );
+        await get().refresh();
+        await get().loadBranches();
+        if (get().view === "history") {
+          await get().loadHistory();
+        }
+      } catch (error) {
+        set({ syncing: false, error: error as AppError });
+        await get().refresh();
+      }
+    },
+
+    pushChanges: async () => {
+      const { repo } = get();
+      if (!repo) return;
+      try {
+        set({ syncing: true, error: null });
+        await ipc.pushCurrent(repo);
+        set({ syncing: false });
+        showNotice("已推送到远程");
+        await get().refresh();
+      } catch (error) {
+        set({ syncing: false, error: error as AppError });
+        await get().refresh();
       }
     },
 

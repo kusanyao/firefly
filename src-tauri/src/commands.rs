@@ -3,7 +3,8 @@ use crate::git::branch::{
     abort_merge as abort_merge_impl, abort_rebase as abort_rebase_impl,
     checkout_branch as switch_branch, checkout_remote_branch as checkout_remote_impl,
     create_branch as create_branch_impl, fetch_remotes as fetch_remotes_impl,
-    merge_branch as merge_branch_impl, read_branches, read_remote_branches,
+    merge_branch as merge_branch_impl, pull_current as pull_current_impl,
+    push_current as push_current_impl, read_branches, read_remote_branches,
     rebase_branch as rebase_branch_impl, BranchInfo, MergeOutcome, RemoteBranch,
 };
 use crate::git::diff::{read_commit_file_diff, read_file_diff, FileDiff, LineRef};
@@ -132,6 +133,16 @@ pub fn repo_remote_branches(repo: String) -> Result<Vec<RemoteBranch>, AppError>
 #[tauri::command(async)]
 pub fn fetch_remotes(repo: String) -> Result<String, AppError> {
     Ok(fetch_remotes_impl(&repo)?)
+}
+
+#[tauri::command(async)]
+pub fn pull_current(repo: String) -> Result<MergeOutcome, AppError> {
+    Ok(pull_current_impl(&repo)?)
+}
+
+#[tauri::command(async)]
+pub fn push_current(repo: String) -> Result<String, AppError> {
+    Ok(push_current_impl(&repo)?)
 }
 
 #[tauri::command(async)]

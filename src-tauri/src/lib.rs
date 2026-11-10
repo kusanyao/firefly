@@ -37,6 +37,8 @@ pub fn run() {
             commands::repo_branches,
             commands::repo_remote_branches,
             commands::fetch_remotes,
+            commands::pull_current,
+            commands::push_current,
             commands::checkout_remote_branch,
             commands::checkout_branch,
             commands::create_branch,

@@ -81,6 +81,67 @@ pub fn checkout_remote_branch(repo: &str, remote: &str, branch: &str) -> GitResu
     Ok(())
 }
 
+/// 拉取当前分支的上游更新。冲突不算失败，返回 `conflict = true`。
+pub fn pull_current(repo: &str) -> GitResult<MergeOutcome> {
+    let output = run_git_output(repo, &["pull", "--no-edit"], None)?;
+    let stdout = decode_bytes(&output.stdout);
+    let stderr = decode_bytes(&output.stderr);
+
+    if output.status.success() {
+        return Ok(MergeOutcome {
+            conflict: false,
+            message: format!("{stdout}{stderr}").trim().to_string(),
+        });
+    }
+
+    let combined = format!("{stdout}\n{stderr}");
+    let conflict = combined.contains("CONFLICT")
+        || combined.contains("Automatic merge failed")
+        || combined.contains("Merge conflict");
+
+    if conflict {
+        Ok(MergeOutcome {
+            conflict: true,
+            message: combined.trim().to_string(),
+        })
+    } else {
+        Err(GitError {
+            message: if stderr.trim().is_empty() {
+                format!("拉取失败：{}", stdout.trim())
+            } else {
+                format!("拉取失败：{}", stderr.trim())
+            },
+            stderr,
+            code: output.status.code(),
+        })
+    }
+}
+
+pub fn push_current(repo: &str) -> GitResult<String> {
+    let output = run_git_output(repo, &["push"], None)?;
+    let stdout = decode_bytes(&output.stdout);
+    let stderr = decode_bytes(&output.stderr);
+
+    if output.status.success() {
+        let message = format!("{stdout}{stderr}").trim().to_string();
+        Ok(if message.is_empty() {
+            "已推送".to_string()
+        } else {
+            message
+        })
+    } else {
+        Err(GitError {
+            message: if stderr.trim().is_empty() {
+                format!("推送失败：{}", stdout.trim())
+            } else {
+                format!("推送失败：{}", stderr.trim())
+            },
+            stderr,
+            code: output.status.code(),
+        })
+    }
+}
+
 /// 抓取所有远程并清理已删除的远程跟踪分支。
 pub fn fetch_remotes(repo: &str) -> GitResult<String> {
     let output = run_git_output(repo, &["fetch", "--all", "--prune"], None)?;

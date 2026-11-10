@@ -70,6 +70,8 @@ export const ipc = {
   repoRemoteBranches: (repo: string) =>
     call<RemoteBranch[]>("repo_remote_branches", { repo }),
   fetchRemotes: (repo: string) => call<string>("fetch_remotes", { repo }),
+  pullCurrent: (repo: string) => call<MergeOutcome>("pull_current", { repo }),
+  pushCurrent: (repo: string) => call<string>("push_current", { repo }),
   checkoutRemoteBranch: (repo: string, remote: string, branch: string) =>
     call<void>("checkout_remote_branch", { repo, remote, branch }),
   checkoutBranch: (repo: string, branch: string) =>
