@@ -34,6 +34,7 @@ export function RepoBar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
+  const [query, setQuery] = useState("");
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const [pendingMerge, setPendingMerge] = useState<string | null>(null);
   const [pendingRebase, setPendingRebase] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function RepoBar() {
     setMenuOpen(false);
     setCreating(false);
     setNewName("");
+    setQuery("");
   };
 
   useEffect(() => {
@@ -83,6 +85,7 @@ export function RepoBar() {
       closeMenu();
       return;
     }
+    setQuery("");
     setMenuOpen(true);
     void useRepo.getState().loadBranches();
   };
@@ -174,6 +177,14 @@ export function RepoBar() {
   const merging = status?.merging ?? false;
   const rebasing = status?.rebasing ?? false;
 
+  const keyword = query.trim().toLowerCase();
+  const filteredBranches = keyword
+    ? branches.filter((item) => item.name.toLowerCase().includes(keyword))
+    : branches;
+  const filteredRemotes = keyword
+    ? remotes.filter((item) => item.name.toLowerCase().includes(keyword))
+    : remotes;
+
   return (
     <header className="repo-bar">
       <button className="btn" onClick={() => void pickRepo()} disabled={busy}>
@@ -239,8 +250,24 @@ export function RepoBar() {
                   <RefreshCw size={13} />
                 </button>
               </div>
+              <div className="branch-search">
+                <input
+                  autoFocus
+                  className="branch-input"
+                  value={query}
+                  placeholder="搜索分支…"
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      closeMenu();
+                    }
+                  }}
+                />
+              </div>
+
               <div className="branch-menu-list">
-                {branches.map((item) => (
+                {filteredBranches.map((item) => (
                   <div
                     key={item.name}
                     className={`branch-item${item.current ? " current" : ""}`}
@@ -281,14 +308,14 @@ export function RepoBar() {
                     )}
                   </div>
                 ))}
-                {!branchesLoading && branches.length === 0 && (
+                {!keyword && !branchesLoading && branches.length === 0 && (
                   <div className="branch-empty">没有本地分支</div>
                 )}
 
-                {remotes.length > 0 && (
+                {filteredRemotes.length > 0 && (
                   <>
                     <div className="branch-subhead">远程分支</div>
-                    {remotes.map((item) => (
+                    {filteredRemotes.map((item) => (
                       <div key={item.name} className="branch-item">
                         <button
                           className="branch-pick"
@@ -303,6 +330,10 @@ export function RepoBar() {
                       </div>
                     ))}
                   </>
+                )}
+
+                {keyword && filteredBranches.length === 0 && filteredRemotes.length === 0 && (
+                  <div className="branch-empty">没有匹配的分支</div>
                 )}
               </div>
 

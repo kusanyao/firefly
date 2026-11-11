@@ -283,6 +283,12 @@ body {
   color: var(--faint);
 }
 
+.branch-search {
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
 .branch-menu-list {
   overflow: auto;
   padding: 4px;
