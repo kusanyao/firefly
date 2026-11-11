@@ -97,6 +97,24 @@ fn parse_log(text: &str) -> Vec<CommitSummary> {
         .collect()
 }
 
+/// 所有分支的最近提交，用于遴选选择器。
+pub fn read_all_commits(repo: &str, limit: usize) -> GitResult<Vec<CommitSummary>> {
+    let limit = limit.clamp(1, 500);
+    let limit_arg = format!("-n{limit}");
+    let out = run_git(
+        repo,
+        &[
+            "log",
+            limit_arg.as_str(),
+            "--all",
+            "--date-order",
+            "--decorate=full",
+            "--format=%H%x1f%h%x1f%an%x1f%at%x1f%s%x1f%D%x1e",
+        ],
+    )?;
+    Ok(parse_log(&out))
+}
+
 fn parse_commit_fields(rest: &str) -> Option<CommitSummary> {
     let mut fields = rest.split('\x1f');
     let hash = fields.next().unwrap_or_default();

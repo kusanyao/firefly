@@ -84,8 +84,13 @@ export const ipc = {
   rebaseBranch: (repo: string, branch: string) =>
     call<MergeOutcome>("rebase_branch", { repo, branch }),
   abortRebase: (repo: string) => call<void>("abort_rebase", { repo }),
+  cherryPick: (repo: string, hash: string) =>
+    call<MergeOutcome>("cherry_pick", { repo, hash }),
+  abortCherryPick: (repo: string) => call<void>("abort_cherry_pick", { repo }),
 
   repoLog: (repo: string, limit = 100) => call<CommitSummary[]>("repo_log", { repo, limit }),
+  allCommits: (repo: string, limit = 100) =>
+    call<CommitSummary[]>("all_commits", { repo, limit }),
   repoGraph: (repo: string, limit = 100) => call<GraphRow[]>("repo_graph", { repo, limit }),
   commitFiles: (repo: string, hash: string) => call<CommitFile[]>("commit_files", { repo, hash }),
   commitDiff: (repo: string, hash: string, path: string) =>

@@ -18,6 +18,7 @@ export interface RepoStatus {
   initial: boolean;
   merging: boolean;
   rebasing: boolean;
+  cherryPicking: boolean;
   entries: StatusEntry[];
 }
 

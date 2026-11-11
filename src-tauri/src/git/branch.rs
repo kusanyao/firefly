@@ -142,6 +142,51 @@ pub fn push_current(repo: &str) -> GitResult<String> {
     }
 }
 
+/// 把某个提交遴选到当前分支。冲突不算失败，返回 `conflict = true`。
+pub fn cherry_pick(repo: &str, hash: &str) -> GitResult<MergeOutcome> {
+    if hash.is_empty() || hash.starts_with('-') {
+        return Err(GitError::new("无效的提交"));
+    }
+
+    let output = run_git_output(repo, &["cherry-pick", hash], None)?;
+    let stdout = decode_bytes(&output.stdout);
+    let stderr = decode_bytes(&output.stderr);
+
+    if output.status.success() {
+        return Ok(MergeOutcome {
+            conflict: false,
+            message: format!("{stdout}{stderr}").trim().to_string(),
+        });
+    }
+
+    let combined = format!("{stdout}\n{stderr}");
+    let conflict = combined.contains("CONFLICT")
+        || combined.contains("could not apply")
+        || combined.contains("After resolving the conflicts");
+
+    if conflict {
+        Ok(MergeOutcome {
+            conflict: true,
+            message: combined.trim().to_string(),
+        })
+    } else {
+        Err(GitError {
+            message: if stderr.trim().is_empty() {
+                format!("遴选失败：{}", stdout.trim())
+            } else {
+                format!("遴选失败：{}", stderr.trim())
+            },
+            stderr,
+            code: output.status.code(),
+        })
+    }
+}
+
+pub fn abort_cherry_pick(repo: &str) -> GitResult<()> {
+    run_git(repo, &["cherry-pick", "--abort"])?;
+    Ok(())
+}
+
 /// 抓取所有远程并清理已删除的远程跟踪分支。
 pub fn fetch_remotes(repo: &str) -> GitResult<String> {
     let output = run_git_output(repo, &["fetch", "--all", "--prune"], None)?;

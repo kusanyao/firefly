@@ -72,6 +72,8 @@ interface RepoStore {
   abortMerge: () => Promise<void>;
   rebaseBranch: (branch: string) => Promise<boolean>;
   abortRebase: () => Promise<void>;
+  cherryPick: (hash: string) => Promise<boolean>;
+  abortCherryPick: () => Promise<void>;
   setView: (view: ViewMode) => void;
   loadHistory: () => Promise<void>;
   selectCommit: (commit: CommitSummary) => Promise<void>;
@@ -533,6 +535,41 @@ export const useRepo = create<RepoStore>((set, get) => {
         if (get().view === "history") {
           await get().loadHistory();
         }
+      } catch (error) {
+        set({ error: error as AppError });
+      }
+    },
+
+    cherryPick: async (hash) => {
+      const { repo } = get();
+      if (!repo) return false;
+      try {
+        set({ error: null });
+        const outcome = await ipc.cherryPick(repo, hash);
+        set({ selection: null, diff: null, ...resetHistory });
+        showNotice(
+          outcome.conflict ? "遴选出现冲突，请解决或中止" : "已遴选该提交",
+        );
+        await get().refresh();
+        await get().loadBranches();
+        await get().loadHistory();
+        return !outcome.conflict;
+      } catch (error) {
+        set({ error: error as AppError });
+        await get().refresh();
+        return false;
+      }
+    },
+
+    abortCherryPick: async () => {
+      const { repo } = get();
+      if (!repo) return;
+      try {
+        await ipc.abortCherryPick(repo);
+        set({ selection: null, diff: null, ...resetHistory });
+        showNotice("已中止遴选");
+        await get().refresh();
+        await get().loadHistory();
       } catch (error) {
         set({ error: error as AppError });
       }

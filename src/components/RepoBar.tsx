@@ -4,6 +4,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   Check,
+  Cherry,
   ChevronDown,
   Cloud,
   FolderOpen,
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { useRepo } from "../stores/repo";
 import type { RemoteBranch } from "../types";
+import { CherryPicker } from "./CherryPicker";
 
 type PendingSwitch =
   | { kind: "local"; name: string }
@@ -38,7 +40,10 @@ export function RepoBar() {
   const [pendingSwitch, setPendingSwitch] = useState<PendingSwitch | null>(null);
   const [pendingMerge, setPendingMerge] = useState<string | null>(null);
   const [pendingRebase, setPendingRebase] = useState<string | null>(null);
-  const [pendingAbort, setPendingAbort] = useState<null | "merge" | "rebase">(null);
+  const [pendingAbort, setPendingAbort] = useState<
+    null | "merge" | "rebase" | "cherry-pick"
+  >(null);
+  const [cherryOpen, setCherryOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const closeMenu = () => {
@@ -164,6 +169,7 @@ export function RepoBar() {
     setPendingAbort(null);
     if (action === "merge") void useRepo.getState().abortMerge();
     if (action === "rebase") void useRepo.getState().abortRebase();
+    if (action === "cherry-pick") void useRepo.getState().abortCherryPick();
   };
 
   const branch = status
@@ -176,6 +182,7 @@ export function RepoBar() {
   const dirty = (status?.entries.length ?? 0) > 0;
   const merging = status?.merging ?? false;
   const rebasing = status?.rebasing ?? false;
+  const cherryPicking = status?.cherryPicking ?? false;
 
   const keyword = query.trim().toLowerCase();
   const filteredBranches = keyword
@@ -215,13 +222,23 @@ export function RepoBar() {
             <ChevronDown size={12} />
           </button>
 
-          {(merging || rebasing) && (
+          {(merging || rebasing || cherryPicking) && (
             <span className="merge-chip">
-              <GitMerge size={11} />
-              {merging ? "合并中" : "变基中"}
+              {merging ? (
+                <GitMerge size={11} />
+              ) : rebasing ? (
+                <GitPullRequestArrow size={11} />
+              ) : (
+                <Cherry size={11} />
+              )}
+              {merging ? "合并中" : rebasing ? "变基中" : "遴选中"}
               <button
                 className="merge-abort"
-                onClick={() => setPendingAbort(merging ? "merge" : "rebase")}
+                onClick={() =>
+                  setPendingAbort(
+                    merging ? "merge" : rebasing ? "rebase" : "cherry-pick",
+                  )
+                }
               >
                 中止
               </button>
@@ -282,7 +299,7 @@ export function RepoBar() {
                       <span className="branch-item-name">{item.name}</span>
                       {item.upstream && <span className="branch-upstream">{item.upstream}</span>}
                     </button>
-                    {!item.current && !merging && !rebasing && (
+                    {!item.current && !merging && !rebasing && !cherryPicking && (
                       <>
                         <button
                           className="branch-action"
@@ -337,6 +354,17 @@ export function RepoBar() {
                 )}
               </div>
 
+              <button
+                className="branch-create-btn"
+                onClick={() => {
+                  closeMenu();
+                  setCherryOpen(true);
+                }}
+              >
+                <Cherry size={12} />
+                遴选提交…
+              </button>
+
               {creating ? (
                 <div className="branch-create">
                   <input
@@ -382,7 +410,9 @@ export function RepoBar() {
           <button
             className="icon-btn"
             title={status.upstream ? `拉取 ${status.upstream}` : "当前分支没有上游分支"}
-            disabled={!status.upstream || syncing || merging || rebasing}
+            disabled={
+              !status.upstream || syncing || merging || rebasing || cherryPicking
+            }
             onClick={() => void useRepo.getState().pullChanges()}
           >
             <ArrowDownToLine size={14} />
@@ -390,7 +420,9 @@ export function RepoBar() {
           <button
             className="icon-btn"
             title={status.upstream ? `推送 ${status.upstream}` : "当前分支没有上游分支"}
-            disabled={!status.upstream || syncing || merging || rebasing}
+            disabled={
+              !status.upstream || syncing || merging || rebasing || cherryPicking
+            }
             onClick={() => void useRepo.getState().pushChanges()}
           >
             <ArrowUpFromLine size={14} />
@@ -454,6 +486,8 @@ export function RepoBar() {
         </div>
       )}
 
+      <CherryPicker open={cherryOpen} onClose={() => setCherryOpen(false)} />
+
       {pendingRebase && (
         <div className="modal-backdrop" onMouseDown={() => setPendingRebase(null)}>
           <div className="modal" onMouseDown={(event) => event.stopPropagation()}>
@@ -480,19 +514,32 @@ export function RepoBar() {
         <div className="modal-backdrop" onMouseDown={() => setPendingAbort(null)}>
           <div className="modal" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-title">
-              中止{pendingAbort === "merge" ? "合并" : "变基"}？
+              中止
+              {pendingAbort === "merge"
+                ? "合并"
+                : pendingAbort === "rebase"
+                  ? "变基"
+                  : "遴选"}
+              ？
             </div>
             <div className="modal-body">
               {pendingAbort === "merge"
                 ? "合并产生的所有改动都会回退到合并前的状态，已解决的冲突也会丢失。"
-                : "变基产生的所有改动都会回退到变基前的状态，已解决的冲突也会丢失。"}
+                : pendingAbort === "rebase"
+                  ? "变基产生的所有改动都会回退到变基前的状态，已解决的冲突也会丢失。"
+                  : "遴选产生的所有改动都会回退到遴选前的状态，已解决的冲突也会丢失。"}
             </div>
             <div className="modal-actions">
               <button className="btn" onClick={() => setPendingAbort(null)}>
                 取消
               </button>
               <button className="btn btn-danger" onClick={confirmAbort}>
-                中止{pendingAbort === "merge" ? "合并" : "变基"}
+                中止
+                {pendingAbort === "merge"
+                  ? "合并"
+                  : pendingAbort === "rebase"
+                    ? "变基"
+                    : "遴选"}
               </button>
             </div>
           </div>

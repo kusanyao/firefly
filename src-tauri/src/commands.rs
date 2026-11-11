@@ -1,14 +1,17 @@
 use crate::error::AppError;
 use crate::git::branch::{
-    abort_merge as abort_merge_impl, abort_rebase as abort_rebase_impl,
-    checkout_branch as switch_branch, checkout_remote_branch as checkout_remote_impl,
+    abort_cherry_pick as abort_cherry_pick_impl, abort_merge as abort_merge_impl,
+    abort_rebase as abort_rebase_impl, checkout_branch as switch_branch,
+    checkout_remote_branch as checkout_remote_impl, cherry_pick as cherry_pick_impl,
     create_branch as create_branch_impl, fetch_remotes as fetch_remotes_impl,
     merge_branch as merge_branch_impl, pull_current as pull_current_impl,
     push_current as push_current_impl, read_branches, read_remote_branches,
     rebase_branch as rebase_branch_impl, BranchInfo, MergeOutcome, RemoteBranch,
 };
 use crate::git::diff::{read_commit_file_diff, read_file_diff, FileDiff, LineRef};
-use crate::git::log::{read_commit_files, read_graph, read_log, CommitFile, CommitSummary, GraphRow};
+use crate::git::log::{
+    read_all_commits, read_commit_files, read_graph, read_log, CommitFile, CommitSummary, GraphRow,
+};
 use crate::git::ops::{self, CommitResult};
 use crate::git::status::{read_repo_root, read_status, RepoStatus};
 use crate::state::AppState;
@@ -185,8 +188,23 @@ pub fn abort_rebase(repo: String) -> Result<(), AppError> {
 }
 
 #[tauri::command(async)]
+pub fn cherry_pick(repo: String, hash: String) -> Result<MergeOutcome, AppError> {
+    Ok(cherry_pick_impl(&repo, &hash)?)
+}
+
+#[tauri::command(async)]
+pub fn abort_cherry_pick(repo: String) -> Result<(), AppError> {
+    Ok(abort_cherry_pick_impl(&repo)?)
+}
+
+#[tauri::command(async)]
 pub fn repo_log(repo: String, limit: Option<usize>) -> Result<Vec<CommitSummary>, AppError> {
     Ok(read_log(&repo, limit.unwrap_or(100))?)
+}
+
+#[tauri::command(async)]
+pub fn all_commits(repo: String, limit: Option<usize>) -> Result<Vec<CommitSummary>, AppError> {
+    Ok(read_all_commits(&repo, limit.unwrap_or(100))?)
 }
 
 #[tauri::command(async)]

@@ -28,6 +28,8 @@ pub struct RepoStatus {
     pub merging: bool,
     /// 是否有进行中的变基（.git/rebase-merge 或 rebase-apply 存在）。
     pub rebasing: bool,
+    /// 是否有进行中的遴选（.git/CHERRY_PICK_HEAD 存在）。
+    pub cherry_picking: bool,
     pub entries: Vec<StatusEntry>,
 }
 
@@ -46,6 +48,7 @@ pub fn read_status(repo: &str) -> GitResult<RepoStatus> {
         status.merging = base.join("MERGE_HEAD").exists();
         status.rebasing =
             base.join("rebase-merge").exists() || base.join("rebase-apply").exists();
+        status.cherry_picking = base.join("CHERRY_PICK_HEAD").exists();
     }
 
     Ok(status)
@@ -66,6 +69,7 @@ pub fn parse_status(output: &str) -> RepoStatus {
         initial: false,
         merging: false,
         rebasing: false,
+        cherry_picking: false,
         entries: Vec::new(),
     };
 

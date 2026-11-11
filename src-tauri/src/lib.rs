@@ -31,6 +31,7 @@ pub fn run() {
             commands::toggle_lines,
             commands::commit,
             commands::repo_log,
+            commands::all_commits,
             commands::repo_graph,
             commands::commit_files,
             commands::commit_diff,
@@ -46,6 +47,8 @@ pub fn run() {
             commands::abort_merge,
             commands::rebase_branch,
             commands::abort_rebase,
+            commands::cherry_pick,
+            commands::abort_cherry_pick,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
